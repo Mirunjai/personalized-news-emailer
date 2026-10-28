@@ -1,0 +1,9 @@
+Summary,Description,Assignee,Story Points,Sprint,Status,Due Date,Issue Key
+CI/CD and repository configuration,"Verify CI on PRs, dependencies, lint/tests, and main branch review rules.",Mirunjai,2,Sprint 1,To Do,2026-10-31,PNE-1
+Sprint tracking and PR governance,"Verify backlog, owners, points, actual status, PR-to-ticket links and review flow.",Mirunjai,1,Sprint 1,To Do,2026-10-31,PNE-2
+Pre-sprint documents and demo,Compare SRS/SAD/Test Plan with instructor templates; prepare demo script and one-minute recording.,Nayana,3,Sprint 1,To Do,2026-10-31,PNE-3
+Database schema and initialization,"Validate SQLite users/preferences tables, uniqueness constraints and reproducible initialization.",Videesha,4,Sprint 1,To Do,2026-10-29,PNE-4
+Subscription and preference APIs,"Validate subscription, retrieve/update endpoints, normalization, duplicate and invalid input behavior.",Videesha,4,Sprint 1,To Do,2026-10-29,PNE-5
+Mock news service and filtering,"Validate mock article loading, single/multiple topic filtering, invalid topics and ordering.",Keerthishree,5,Sprint 1,To Do,2026-10-30,PNE-6
+Subscription dashboard and feed preview,"Validate subscription form, preference update and personalized feed preview against integrated backend.",Keerthishree,3,Sprint 1,To Do,2026-10-30,PNE-7
+Automated tests and regression,Run TC-01–TC-06 and edge cases on integrated app using isolated test databases; save evidence.,Nayana,4,Sprint 1,To Do,2026-10-31,PNE-8
