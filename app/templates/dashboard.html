@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Personalized News Emailer</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-100 min-h-screen text-slate-800">
+  <header class="bg-gradient-to-r from-indigo-600 to-blue-500 text-white">
+    <div class="max-w-4xl mx-auto px-6 py-8">
+      <h1 class="text-3xl font-bold">Personalized News Emailer</h1>
+      <p class="mt-1 text-indigo-100">Pick your topics, save your preferences and preview your daily digest.</p>
+    </div>
+  </header>
+
+  <main class="max-w-4xl mx-auto px-6 py-8 space-y-8">
+    <section class="bg-white rounded-xl shadow p-6">
+      <h2 class="text-xl font-semibold mb-4">1. Your preferences</h2>
+      <label for="email" class="block text-sm font-medium mb-1">Email address</label>
+      <input id="email" type="email" placeholder="you@example.com"
+             class="w-full border border-slate-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+
+      <p class="block text-sm font-medium mt-5 mb-2">Topics</p>
+      <div id="topics" class="grid grid-cols-2 sm:grid-cols-5 gap-3">
+        <label class="flex items-center gap-2 border rounded-lg px-3 py-2 cursor-pointer hover:bg-slate-50">
+          <input type="checkbox" name="topic" value="technology" class="accent-indigo-600"> Technology
+        </label>
+        <label class="flex items-center gap-2 border rounded-lg px-3 py-2 cursor-pointer hover:bg-slate-50">
+          <input type="checkbox" name="topic" value="finance" class="accent-indigo-600"> Finance
+        </label>
+        <label class="flex items-center gap-2 border rounded-lg px-3 py-2 cursor-pointer hover:bg-slate-50">
+          <input type="checkbox" name="topic" value="sports" class="accent-indigo-600"> Sports
+        </label>
+        <label class="flex items-center gap-2 border rounded-lg px-3 py-2 cursor-pointer hover:bg-slate-50">
+          <input type="checkbox" name="topic" value="health" class="accent-indigo-600"> Health
+        </label>
+        <label class="flex items-center gap-2 border rounded-lg px-3 py-2 cursor-pointer hover:bg-slate-50">
+          <input type="checkbox" name="topic" value="science" class="accent-indigo-600"> Science
+        </label>
+      </div>
+
+      <div class="flex flex-wrap gap-3 mt-6">
+        <button id="save-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white font-medium px-5 py-2 rounded-lg">
+          Save Preferences
+        </button>
+        <button id="load-btn" class="bg-slate-200 hover:bg-slate-300 font-medium px-5 py-2 rounded-lg">
+          Load Saved Topics
+        </button>
+        <button id="preview-btn" class="bg-emerald-600 hover:bg-emerald-700 text-white font-medium px-5 py-2 rounded-lg">
+          Preview My Personalized Feed
+        </button>
+      </div>
+      <p id="message" class="mt-4 text-sm font-medium hidden"></p>
+    </section>
+
+    <section class="bg-white rounded-xl shadow p-6">
+      <h2 class="text-xl font-semibold mb-4">2. Your digest preview <span id="count" class="text-sm text-slate-500"></span></h2>
+      <div id="feed" class="space-y-4">
+        <p class="text-slate-500">Save your preferences, then click "Preview My Personalized Feed".</p>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const BADGES = {
+      technology: "bg-blue-100 text-blue-700",
+      finance: "bg-green-100 text-green-700",
+      sports: "bg-orange-100 text-orange-700",
+      health: "bg-rose-100 text-rose-700",
+      science: "bg-purple-100 text-purple-700"
+    };
+
+    const emailInput = document.getElementById("email");
+    const messageBox = document.getElementById("message");
+    const feedBox = document.getElementById("feed");
+    const countLabel = document.getElementById("count");
+
+    function showMessage(text, isError) {
+      messageBox.textContent = text;
+      messageBox.className = "mt-4 text-sm font-medium " + (isError ? "text-red-600" : "text-emerald-600");
+    }
+
+    function selectedTopics() {
+      return Array.from(document.querySelectorAll("input[name=topic]:checked")).map(function (box) {
+        return box.value;
+      });
+    }
+
+    function setTopics(topics) {
+      document.querySelectorAll("input[name=topic]").forEach(function (box) {
+        box.checked = topics.indexOf(box.value) !== -1;
+      });
+    }
+
+    function errorText(data) {
+      if (data && Array.isArray(data.detail) && data.detail.length > 0) {
+        return data.detail[0].msg;
+      }
+      return (data && data.detail) || "Something went wrong";
+    }
+
+    async function callApi(url, method, body) {
+      const options = { method: method, headers: { "Content-Type": "application/json" } };
+      if (body) {
+        options.body = JSON.stringify(body);
+      }
+      const response = await fetch(url, options);
+      const data = await response.json();
+      return { ok: response.ok, status: response.status, data: data };
+    }
+
+    function validateInput() {
+      const email = emailInput.value.trim();
+      if (!email) {
+        showMessage("Please enter your email address.", true);
+        return null;
+      }
+      return email;
+    }
+
+    async function savePreferences() {
+      const email = validateInput();
+      if (!email) { return; }
+      const topics = selectedTopics();
+      if (topics.length === 0) {
+        showMessage("Please select at least one topic.", true);
+        return;
+      }
+      let result = await callApi("/api/subscribe", "POST", { email: email, topics: topics });
+      if (result.status === 400) {
+        result = await callApi("/api/preferences/" + encodeURIComponent(email), "PUT", { topics: topics });
+      }
+      if (result.ok) {
+        showMessage("Preferences saved for " + result.data.email + ": " + result.data.topics.join(", "), false);
+      } else {
+        showMessage(errorText(result.data), true);
+      }
+    }
+
+    async function loadPreferences() {
+      const email = validateInput();
+      if (!email) { return; }
+      const result = await callApi("/api/preferences/" + encodeURIComponent(email), "GET");
+      if (result.ok) {
+        setTopics(result.data.topics);
+        showMessage("Loaded saved topics: " + result.data.topics.join(", "), false);
+      } else {
+        showMessage(errorText(result.data), true);
+      }
+    }
+
+    function renderArticle(article) {
+      const card = document.createElement("article");
+      card.className = "border border-slate-200 rounded-lg p-4";
+
+      const badge = document.createElement("span");
+      badge.className = "text-xs font-semibold px-2 py-1 rounded-full " + (BADGES[article.topic] || "bg-slate-100");
+      badge.textContent = article.topic;
+
+      const title = document.createElement("h3");
+      title.className = "mt-2 text-lg font-semibold";
+      title.textContent = article.title;
+
+      const meta = document.createElement("p");
+      meta.className = "text-xs text-slate-500";
+      meta.textContent = article.source + " - " + new Date(article.published_at).toLocaleDateString();
+
+      const summary = document.createElement("p");
+      summary.className = "mt-2 text-sm text-slate-700";
+      summary.textContent = article.summary;
+
+      card.append(badge, title, meta, summary);
+      return card;
+    }
+
+    async function previewFeed() {
+      const email = validateInput();
+      if (!email) { return; }
+      const result = await callApi("/api/news?email=" + encodeURIComponent(email), "GET");
+      feedBox.innerHTML = "";
+      if (!result.ok) {
+        countLabel.textContent = "";
+        showMessage(result.status === 404 ? "No saved preferences yet. Click Save Preferences first." : errorText(result.data), true);
+        return;
+      }
+      showMessage("Showing the digest for " + email, false);
+      countLabel.textContent = "(" + result.data.length + " articles)";
+      result.data.forEach(function (article) {
+        feedBox.appendChild(renderArticle(article));
+      });
+    }
+
+    document.getElementById("save-btn").addEventListener("click", savePreferences);
+    document.getElementById("load-btn").addEventListener("click", loadPreferences);
+    document.getElementById("preview-btn").addEventListener("click", previewFeed);
+  </script>
+</body>
+</html>
