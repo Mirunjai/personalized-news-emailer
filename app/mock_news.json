@@ -1,0 +1,162 @@
+[
+  {
+    "id": 1,
+    "title": "Open-Source AI Toolkit Reaches 1.0 Milestone",
+    "source": "TechWire",
+    "topic": "technology",
+    "summary": "After two years of community development, a popular open-source machine learning toolkit ships its first stable release with improved documentation and a simpler API.",
+    "published_at": "2026-03-02T08:30:00Z"
+  },
+  {
+    "id": 2,
+    "title": "Chipmaker Unveils Low-Power Processor for Edge Devices",
+    "source": "Silicon Daily",
+    "topic": "technology",
+    "summary": "A new processor design promises double the battery life for smart sensors and wearables while keeping on-device inference fast.",
+    "published_at": "2026-03-04T10:15:00Z"
+  },
+  {
+    "id": 3,
+    "title": "Cloud Providers Expand Regional Data Centers",
+    "source": "CloudBeat",
+    "topic": "technology",
+    "summary": "Major cloud vendors announce new regions across Asia and Africa to reduce latency and meet data residency requirements.",
+    "published_at": "2026-03-06T14:00:00Z"
+  },
+  {
+    "id": 4,
+    "title": "Cybersecurity Report Highlights Rise in Phishing Attacks",
+    "source": "ByteSecure",
+    "topic": "technology",
+    "summary": "An annual security report finds phishing attempts increased sharply and urges organisations to adopt multi-factor authentication.",
+    "published_at": "2026-03-08T09:45:00Z"
+  },
+  {
+    "id": 5,
+    "title": "Central Bank Holds Interest Rates Steady",
+    "source": "Market Pulse",
+    "topic": "finance",
+    "summary": "Policymakers keep the benchmark rate unchanged, citing stable growth and easing price pressures across major sectors.",
+    "published_at": "2026-03-03T07:20:00Z"
+  },
+  {
+    "id": 6,
+    "title": "Global Stocks Rally on Strong Earnings",
+    "source": "Capital Ledger",
+    "topic": "finance",
+    "summary": "Equity indices climb as quarterly results from banks and retailers beat analyst expectations.",
+    "published_at": "2026-03-05T16:40:00Z"
+  },
+  {
+    "id": 7,
+    "title": "Startup Funding Rebounds in First Quarter",
+    "source": "Venture Weekly",
+    "topic": "finance",
+    "summary": "Venture investment rises for the second consecutive quarter, led by climate technology and healthcare start-ups.",
+    "published_at": "2026-03-07T11:05:00Z"
+  },
+  {
+    "id": 8,
+    "title": "Inflation Cools as Energy Prices Ease",
+    "source": "Economy Today",
+    "topic": "finance",
+    "summary": "Consumer price growth slows to its lowest level in a year, driven mainly by lower fuel and electricity costs.",
+    "published_at": "2026-03-09T06:55:00Z"
+  },
+  {
+    "id": 9,
+    "title": "Underdogs Clinch Championship in Overtime Thriller",
+    "source": "Sports Arena",
+    "topic": "sports",
+    "summary": "A last-second basket sends the final into overtime, where the underdog squad completes a stunning comeback.",
+    "published_at": "2026-03-01T22:10:00Z"
+  },
+  {
+    "id": 10,
+    "title": "Marathon Record Broken at City Run",
+    "source": "Track and Field Weekly",
+    "topic": "sports",
+    "summary": "A distance runner shaves almost a minute off the course record in near-perfect weather conditions.",
+    "published_at": "2026-03-04T13:30:00Z"
+  },
+  {
+    "id": 11,
+    "title": "Young Striker Signs Record Transfer Deal",
+    "source": "Pitch Report",
+    "topic": "sports",
+    "summary": "A 20-year-old forward joins a top European club in the most expensive transfer of the season.",
+    "published_at": "2026-03-06T18:25:00Z"
+  },
+  {
+    "id": 12,
+    "title": "National Cricket Squad Announced for Overseas Tour",
+    "source": "Boundary Line",
+    "topic": "sports",
+    "summary": "Selectors name a balanced squad with three uncapped players for the upcoming five-match series.",
+    "published_at": "2026-03-09T12:00:00Z"
+  },
+  {
+    "id": 13,
+    "title": "Study Links Daily Walking to Better Heart Health",
+    "source": "Health Journal",
+    "topic": "health",
+    "summary": "Researchers following 30,000 adults find that a brisk 30-minute walk each day is associated with a lower risk of heart disease.",
+    "published_at": "2026-03-02T09:00:00Z"
+  },
+  {
+    "id": 14,
+    "title": "New Vaccine Trial Shows Promising Results",
+    "source": "MediDaily",
+    "topic": "health",
+    "summary": "Phase 2 trial data indicate a strong immune response with mild side effects, paving the way for larger studies.",
+    "published_at": "2026-03-05T08:10:00Z"
+  },
+  {
+    "id": 15,
+    "title": "Sleep Experts Recommend Consistent Bedtimes",
+    "source": "Wellness Weekly",
+    "topic": "health",
+    "summary": "A review of sleep studies concludes that regular sleep schedules improve mood and concentration more than extra weekend rest.",
+    "published_at": "2026-03-07T07:45:00Z"
+  },
+  {
+    "id": 16,
+    "title": "Hospitals Pilot AI-Assisted Diagnostic Scans",
+    "source": "Care Chronicle",
+    "topic": "health",
+    "summary": "Three regional hospitals begin trials of software that flags suspicious areas on scans for radiologists to review.",
+    "published_at": "2026-03-08T15:20:00Z"
+  },
+  {
+    "id": 17,
+    "title": "Telescope Captures Detailed Image of Distant Galaxy Cluster",
+    "source": "Cosmos Times",
+    "topic": "science",
+    "summary": "Astronomers release a deep-field image revealing hundreds of faint galaxies bound together by gravity.",
+    "published_at": "2026-03-03T19:30:00Z"
+  },
+  {
+    "id": 18,
+    "title": "Researchers Develop Biodegradable Battery Material",
+    "source": "Science Frontier",
+    "topic": "science",
+    "summary": "A university team creates an electrode material that breaks down safely in soil within weeks, opening the door to greener electronics.",
+    "published_at": "2026-03-05T12:50:00Z"
+  },
+  {
+    "id": 19,
+    "title": "Deep-Sea Expedition Discovers New Species",
+    "source": "Ocean Review",
+    "topic": "science",
+    "summary": "A research vessel documents more than a dozen previously unknown organisms living near hydrothermal vents.",
+    "published_at": "2026-03-07T17:15:00Z"
+  },
+  {
+    "id": 20,
+    "title": "Climate Model Improves Regional Rainfall Forecasts",
+    "source": "Earth Observer",
+    "topic": "science",
+    "summary": "An updated climate model cuts forecast errors for monsoon rainfall, helping farmers plan planting seasons.",
+    "published_at": "2026-03-09T10:35:00Z"
+  }
+]
