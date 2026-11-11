@@ -1,4 +1,4 @@
-"""FastAPI application: dashboard UI plus subscription, preference and news APIs."""
+"""FastAPI application: dashboard, subscription, news and digest APIs."""
 from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import List, Optional
@@ -6,9 +6,15 @@ from typing import List, Optional
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.responses import HTMLResponse
 
-from app import database, news_service
+from app import database, digest_job, news_service
 from app.models import VALID_TOPICS, DuplicateUserError, UserRecord
-from app.schemas import NewsArticle, PreferenceUpdate, SubscriptionCreate, UserResponse, normalize_email
+from app.schemas import (
+    NewsArticle,
+    PreferenceUpdate,
+    SubscriptionCreate,
+    UserResponse,
+    normalize_email,
+)
 
 DASHBOARD_FILE = Path(__file__).resolve().parent / "templates" / "dashboard.html"
 
@@ -22,8 +28,8 @@ async def lifespan(_app: FastAPI):
 
 app = FastAPI(
     title="Personalized News Emailer",
-    description="Sprint 1: topic preference storage and mock news preview.",
-    version="1.0.0",
+    description="Topic preferences, mock news preview and personalized mock email digests.",
+    version="2.0.0",
     lifespan=lifespan,
 )
 
@@ -85,3 +91,15 @@ def get_news(
             raise HTTPException(status_code=400, detail=message)
         return news_service.filter_by_topics(topics)
     return news_service.get_all_articles()
+
+
+@app.post("/api/digest/run")
+def run_digest():
+    """Run one digest cycle immediately; messages are written to a local mock outbox."""
+    return digest_job.run_digest_job()
+
+
+@app.get("/api/digest/history")
+def digest_history(limit: int = Query(50, ge=1)):
+    """Return recent digest outcomes."""
+    return database.get_digest_history(limit)

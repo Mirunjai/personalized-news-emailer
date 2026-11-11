@@ -1,167 +1,58 @@
-# System Architecture Document (SAD)
+# System Architecture Document
 
-**Project:** Personalized News Emailer | **Version:** 1.0 | **Team:** 15
+**Project:** Personalized News Emailer — Team 15
 
-| Name | SRN | Role |
-|------|-----|------|
-| Mirunjai Suresh Kumar | PES1UG24AM161 | Architecture, CI/CD, PR reviews |
-| Kota Videesha | PES1UG24AM140 | Database schema, preference APIs |
-| Keerthishree R | PES1UG24AM132 | News service, UI |
-| Nayana S M | PES1UG24AM174 | Documentation, unit tests |
+## Architecture
 
-## 1. Architectural Style
-The system follows a **3-tier modular architecture**: presentation, application (business logic) and data. Each tier
-talks only to the adjacent one, and each module has a single responsibility, which keeps units testable and replaceable.
-
-## 2. Architecture Diagram
+Three tiers:
+1. Presentation: HTML dashboard and Swagger API documentation.
+2. Application: FastAPI routes, Pydantic validation, news filtering, digest orchestration, email rendering and mock dispatch.
+3. Data: SQLite subscribers/preferences/digest history, JSON mock news source and local JSONL email outbox.
 
 ```mermaid
 flowchart TB
-    subgraph T1["Tier 1 - Presentation"]
-        UI["Browser Dashboard<br/>dashboard.html (Tailwind + JS)"]
-        DOCS["Swagger UI /docs"]
-    end
-
-    subgraph T2["Tier 2 - Application (FastAPI)"]
-        API["main.py<br/>REST routes"]
-        SCH["schemas.py<br/>Pydantic validation"]
-        NS["news_service.py<br/>Topic filtering and personalized feed"]
-        DJ["digest_job.py (Sprint 2)<br/>Digest generation job"]
-        ET["email_template.py (Sprint 2)<br/>Templating and mock sender"]
-    end
-
-    subgraph T3["Tier 3 - Data"]
-        DB[("SQLite<br/>users, topic_preferences")]
-        NEWS[["mock_news.json<br/>Mock news source"]]
-        LOG[["Email log (Sprint 2)"]]
-    end
-
-    UI -->|HTTP JSON| API
-    DOCS -->|HTTP JSON| API
-    API --> SCH
-    API -->|CRUD via database.py| DB
-    API --> NS
-    NS --> NEWS
-    DJ --> NS
-    DJ -->|read subscribers| DB
-    DJ --> ET
-    ET --> LOG
+  UI[Dashboard / API client] --> API[FastAPI routes]
+  API --> DB[(SQLite)]
+  API --> NEWS[Mock news service]
+  API --> JOB[Digest job]
+  JOB --> DB
+  JOB --> NEWS
+  JOB --> TEMPLATE[HTML + text template]
+  TEMPLATE --> SENDER[Mock sender]
+  SENDER --> OUTBOX[Local JSONL outbox]
+  JOB --> HISTORY[(digest_log)]
 ```
 
-## 3. Database Schema (SQLite)
+## Sprint 2 components
 
-### 3.1 Table `users`
-| Column | Type | Constraints | Description |
-|--------|------|-------------|-------------|
-| id | INTEGER | PRIMARY KEY AUTOINCREMENT | Surrogate key |
-| email | TEXT | NOT NULL, UNIQUE | Normalised (lowercase) email |
-| created_at | TEXT | NOT NULL | ISO-8601 UTC timestamp |
+| Module | Responsibility |
+|---|---|
+| app/digest_job.py | Processes each subscriber independently; callable via API or CLI |
+| app/email_template.py | Escaped HTML and plain-text email rendering |
+| app/email_sender.py | Local JSONL mock outbox; no network delivery |
+| app/database.py | Idempotent schema, subscriber enumeration and digest outcome history |
 
-### 3.2 Table `topic_preferences`
-| Column | Type | Constraints | Description |
-|--------|------|-------------|-------------|
-| id | INTEGER | PRIMARY KEY AUTOINCREMENT | Surrogate key |
-| user_id | INTEGER | NOT NULL, FOREIGN KEY users(id) ON DELETE CASCADE | Owner |
-| topic | TEXT | NOT NULL | One of the five valid topics |
-| (user_id, topic) | - | UNIQUE | A topic is stored once per user |
+## Data model
 
-Relationship: `users` 1 --- N `topic_preferences`.
+- `users(id, email, created_at)`
+- `topic_preferences(id, user_id, topic)`, unique per user/topic
+- `digest_log(id, subscriber_email, run_id, run_at, status, article_count, subject, error)`
 
-```sql
-CREATE TABLE IF NOT EXISTS users (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    email TEXT NOT NULL UNIQUE,
-    created_at TEXT NOT NULL
-);
-CREATE TABLE IF NOT EXISTS topic_preferences (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    topic TEXT NOT NULL,
-    UNIQUE (user_id, topic)
-);
-```
+Allowed statuses: `sent`, `no_articles`, `failed`.
 
-## 4. API Endpoint Specifications
+## Workflow
 
-Valid topics: `technology`, `finance`, `sports`, `health`, `science`.
+1. A manual API request or daily OS scheduler starts `python -m app.digest_job`.
+2. The job loads subscribers and saved topics.
+3. Articles are filtered separately for each subscriber.
+4. Empty results are recorded as `no_articles`.
+5. Non-empty results are rendered as HTML and text, then written to the local mock outbox.
+6. Each result is persisted in `digest_log`; a failure for one subscriber does not stop later subscribers.
 
-### 4.1 `POST /api/subscribe`
-Request:
-```json
-{"email": "user@example.com", "topics": ["technology", "science"]}
-```
-Response `201 Created`:
-```json
-{"email": "user@example.com", "topics": ["technology", "science"], "created_at": "2026-03-10T09:00:00+00:00"}
-```
-Errors: `400` `{"detail": "Email already subscribed"}`; `422` invalid email or topic.
+## Scheduling
 
-### 4.2 `GET /api/preferences/{email}`
-Response `200 OK`:
-```json
-{"email": "user@example.com", "topics": ["technology", "science"], "created_at": "2026-03-10T09:00:00+00:00"}
-```
-Errors: `404` `{"detail": "User not found"}`.
+No always-running scheduler library is required. The CLI command is scheduled with cron on Linux/macOS or Windows Task Scheduler. The README contains examples. The scheduled task must use the project directory and the same database/outbox environment variables as the application.
 
-### 4.3 `PUT /api/preferences/{email}`
-Request:
-```json
-{"topics": ["finance", "health"]}
-```
-Response `200 OK`: updated user object (same shape as 4.2).
-Errors: `404` unknown user; `422` invalid or empty topics.
+## Verification
 
-### 4.4 `GET /api/news`
-| Query parameter | Meaning |
-|-----------------|---------|
-| `topic` | One topic or a comma-separated list, e.g. `finance,sports` |
-| `email` | Personalized feed from the subscriber's saved topics (takes precedence over `topic`) |
-| (none) | All articles |
-
-Response `200 OK`:
-```json
-[
-  {
-    "id": 1,
-    "title": "Open-Source AI Toolkit Reaches 1.0 Milestone",
-    "source": "TechWire",
-    "topic": "technology",
-    "summary": "After two years of community development...",
-    "published_at": "2026-03-02T08:30:00Z"
-  }
-]
-```
-Errors: `400` invalid topic; `404` unknown email.
-
-### 4.5 `GET /`
-Returns the HTML dashboard.
-
-## 5. Component Breakdown
-
-### 5.1 Sprint 1 (implemented)
-| Component | File | Owner | Responsibility |
-|-----------|------|-------|----------------|
-| CI/CD pipeline | `.github/workflows/ci.yml` | Mirunjai | flake8 and pytest on every push/PR |
-| API layer | `app/main.py` | Kota Videesha | Routes, status codes, error mapping |
-| Persistence | `app/database.py`, `app/models.py` | Kota Videesha | SQLite schema and CRUD |
-| Validation | `app/schemas.py` | Kota Videesha | Pydantic request/response models |
-| News service | `app/news_service.py`, `app/mock_news.json` | Keerthishree | Load, filter, personalize news |
-| Dashboard | `app/templates/dashboard.html` | Keerthishree | Preferences form and feed preview |
-| Tests | `tests/test_app.py` | Nayana | TC-01 to TC-06 plus edge cases |
-| Documentation | `docs/` | Nayana | SRS, SAD, Test Plan, Demo Script |
-
-### 5.2 Sprint 2 (planned)
-| Component | Planned file | Responsibility |
-|-----------|--------------|----------------|
-| Digest generation job | `app/digest_job.py` | Compile per-subscriber digests; on-demand endpoint and daily schedule |
-| Email templating stub | `app/email_template.py` | Jinja2 HTML/text templates for the digest |
-| Mock email sender | `app/email_sender.py` | `EmailSender` interface plus a logging mock implementation |
-| Digest history | new table `digest_log` | Record job runs and outcomes |
-| Pluggable news provider | `app/news_service.py` | Provider interface so a real news API can replace the mock |
-
-## 6. Design Decisions
-- **sqlite3 over an ORM:** keeps dependencies small and the SQL visible to the team.
-- **Normalised schema:** topics in their own table keep queries simple and allow per-topic statistics later.
-- **Email normalisation:** lowercase and trim on entry prevents duplicate subscriptions that differ only by case.
-- **Environment-driven DB path (`NEWS_DB_PATH`):** tests use isolated temporary databases.
-- **Mocked delivery:** avoids external dependencies and credentials during the course project.
+Run `flake8 .` and `pytest --cov=app --cov-report=term-missing`. The digest test suite verifies subscriber-specific filtering, template escaping, local mock dispatch, empty/failure isolation, API invocation and history lookup.
