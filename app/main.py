@@ -100,6 +100,6 @@ def run_digest():
 
 
 @app.get("/api/digest/history")
-def digest_history(limit: int = Query(50, ge=1, le=500)):
+def digest_history(limit: int = Query(50, ge=1)):
     """Return recent digest outcomes."""
     return database.get_digest_history(limit)
