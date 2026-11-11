@@ -1,97 +1,89 @@
 # Personalized News Emailer
 
-[![CI](https://github.com/Mirunjai/personalized-news-emailer/actions/workflows/ci.yml/badge.svg)](https://github.com/Mirunjai/personalized-news-emailer/actions/workflows/ci.yml)
-![Python](https://img.shields.io/badge/python-3.11-blue)
-![FastAPI](https://img.shields.io/badge/FastAPI-0.115-009688)
-![Tests](https://img.shields.io/badge/tests-pytest-brightgreen)
-![Lint](https://img.shields.io/badge/lint-flake8-informational)
+A college software-engineering project that lets subscribers choose news topics, preview a personalized feed, and run a daily mock email digest.
 
-A subscription service where users select news topics and receive a daily digest email (mocked) compiled from
-selected news sources. It uses topic-preference storage, digest-generation jobs and email-templating stubs.
+## Features
 
-**Sprint 1 delivers:** subscription and preference management APIs, a mock news aggregator, a personalized feed
-preview and a web dashboard, all protected by a CI pipeline (flake8 + pytest + coverage).
-
-## Team 15
-
-| Name | SRN | Role |
-|------|-----|------|
-| Mirunjai Suresh Kumar | PES1UG24AM161 | Repo Owner, CI/CD, Architecture and PR Reviews |
-| Kota Videesha | PES1UG24AM140 | Database Schema and Preference CRUD APIs |
-| Keerthishree R | PES1UG24AM132 | Mock News Aggregator Service and Frontend/UI Demo |
-| Nayana S M | PES1UG24AM174 | Pre-Sprint Documentation (SRS, SAD, Test Plan) and Unit Testing |
-
-## Architecture overview
-
-A 3-tier modular architecture (full diagram in [docs/SAD_System_Design.md](docs/SAD_System_Design.md)):
-
-1. **Presentation tier:** `app/templates/dashboard.html` (Tailwind CSS + vanilla JS).
-2. **Application tier:** FastAPI routes in `app/main.py`, validation in `app/schemas.py`, news logic in `app/news_service.py`.
-3. **Data tier:** SQLite (`app/database.py`) for users and topic preferences, plus `app/mock_news.json` as the news source.
-
-```
-personalized-news-emailer/
-|-- .github/workflows/ci.yml
-|-- app/
-|   |-- main.py  database.py  models.py  schemas.py  news_service.py  mock_news.json
-|   `-- templates/dashboard.html
-|-- docs/  (SRS, SAD, Test Plan, Demo Script)
-|-- tests/ (test_app.py, test_smoke.py)
-|-- requirements.txt  .flake8  pytest.ini  .gitignore
-```
+- Subscribe and update topic preferences (SQLite).
+- Browse a mock news feed filtered by topic.
+- Generate an individual digest for every subscriber.
+- Render HTML and plain-text email content.
+- Save mock messages to a local JSON Lines outbox (no real email is sent).
+- Record sent, no-article and failed outcomes in SQLite.
+- Trigger a digest manually through the API or CLI; schedule the CLI command daily using the operating system scheduler.
 
 ## Setup
 
 Requires Python 3.11+.
 
 ```bash
-python3 -m venv .venv
-source .venv/bin/activate          # Windows: .venv\Scripts\activate
+python -m venv .venv
+source .venv/bin/activate
+# Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 uvicorn app.main:app --reload
 ```
 
-Open http://127.0.0.1:8000 for the dashboard and http://127.0.0.1:8000/docs for the interactive API docs.
-The SQLite file `news_emailer.db` is created automatically (override the location with `NEWS_DB_PATH`).
+Dashboard: http://127.0.0.1:8000  
+Swagger API: http://127.0.0.1:8000/docs
 
-## API documentation
+The database defaults to `news_emailer.db`. Set `NEWS_DB_PATH` to use another SQLite file.
+The mock outbox defaults to `mock_email_outbox.jsonl`; set `NEWS_EMAIL_OUTBOX` to change it.
 
-| Method | Endpoint | Description | Success | Errors |
-|--------|----------|-------------|---------|--------|
-| GET | `/` | Dashboard UI | 200 | - |
-| POST | `/api/subscribe` | Register email with initial topics | 201 | 400 duplicate, 422 invalid input |
-| GET | `/api/preferences/{email}` | Get saved topics | 200 | 404 unknown user |
-| PUT | `/api/preferences/{email}` | Replace saved topics | 200 | 404 unknown user, 422 invalid topic |
-| GET | `/api/news?topic=technology` | Filter news by one or more (comma-separated) topics | 200 | 400 invalid topic |
-| GET | `/api/news?email=user@example.com` | Personalized feed from saved topics | 200 | 404 unknown user |
+## API
 
-Valid topics: `technology`, `finance`, `sports`, `health`, `science`.
+| Method | Endpoint | Description |
+|---|---|---|
+| POST | `/api/subscribe` | Register subscriber and topics |
+| GET | `/api/preferences/{email}` | Read preferences |
+| PUT | `/api/preferences/{email}` | Replace preferences |
+| GET | `/api/news?topic=technology,finance` | Filter mock news |
+| GET | `/api/news?email=user@example.com` | Preview personalized feed |
+| POST | `/api/digest/run` | Run one digest cycle now |
+| GET | `/api/digest/history?limit=50` | Read recent digest outcomes |
 
 Example:
-
 ```bash
-curl -X POST http://127.0.0.1:8000/api/subscribe \
-  -H "Content-Type: application/json" \
-  -d '{"email": "user@example.com", "topics": ["technology", "science"]}'
-
-curl "http://127.0.0.1:8000/api/news?email=user@example.com"
+curl -X POST http://127.0.0.1:8000/api/digest/run
+curl "http://127.0.0.1:8000/api/digest/history?limit=20"
 ```
 
-## Running tests and linting
+## Run the digest manually or daily
+
+```bash
+python -m app.digest_job
+```
+
+For a daily run, schedule that command at the desired time with the OS scheduler:
+- Linux/macOS cron example (runs daily at 08:00): `0 8 * * * cd /path/to/personalized-news-emailer && /path/to/python -m app.digest_job`
+- Windows: create a daily Task Scheduler task that runs `python -m app.digest_job` with the repository as its working directory.
+
+The project deliberately uses OS scheduling rather than an always-running scheduler dependency. Configure the database and outbox paths in the task's environment if needed.
+
+## Tests and lint
 
 ```bash
 flake8 .
 pytest --cov=app --cov-report=term-missing
 ```
 
+## Team 15
+
+| Member | SRN | Responsibility |
+|---|---|---|
+| Mirunjai Suresh Kumar | PES1UG24AM161 | Repository, CI/CD, architecture and reviews |
+| Kota Videesha | PES1UG24AM140 | Database and preference APIs |
+| Keerthishree R | PES1UG24AM132 | News service, digest and UI |
+| Nayana S M | PES1UG24AM174 | Documentation and tests |
+
 ## Documentation
 
-- [Software Requirements Specification](docs/SRS_Requirement_Analysis.md)
-- [System Architecture Document](docs/SAD_System_Design.md)
-- [Test Plan](docs/Test_Plan.md)
-- [Sprint 1 Demo Script](docs/Sprint1_Demo_Script.md)
+- `docs/SRS_Requirement_Analysis.md`
+- `docs/SAD_System_Design.md`
+- `docs/Test_Plan.md`
+- `docs/Sprint1_Demo_Script.md`
+- `docs/Sprint2_Demo_Script.md`
+- `docs/Sprint2_Presentation_Outline.md`
+- `docs/SPRINT_TRACKING.md`
 
-## Branching and workflow
-
-`main` is protected by CI. Work happens on feature branches (`feature/docs-and-tests`,
-`feature/db-and-preference-api`, `feature/news-service-and-ui`) and is merged through reviewed pull requests.
+**Demo safety:** the sender only appends to a local JSONL file. It never sends email over SMTP or an external API.
