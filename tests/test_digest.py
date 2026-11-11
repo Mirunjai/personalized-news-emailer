@@ -124,7 +124,6 @@ def test_history_limit_is_bounded(client):
     assert len(response.json()) <= 500
 
 
-
 def test_database_creates_missing_parent_directories(tmp_path, monkeypatch):
     db_path = tmp_path / "nested" / "data" / "news.db"
     monkeypatch.setenv("NEWS_DB_PATH", str(db_path))
