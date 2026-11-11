@@ -105,9 +105,26 @@
       if (body) {
         options.body = JSON.stringify(body);
       }
-      const response = await fetch(url, options);
-      const data = await response.json();
-      return { ok: response.ok, status: response.status, data: data };
+      try {
+        const response = await fetch(url, options);
+        let data;
+        try {
+          data = await response.json();
+        } catch (_error) {
+          data = {
+            detail: response.ok
+              ? "The server returned an unreadable response."
+              : "The request failed with status " + response.status + "."
+          };
+        }
+        return { ok: response.ok, status: response.status, data: data };
+      } catch (_error) {
+        return {
+          ok: false,
+          status: 0,
+          data: { detail: "Cannot connect to the application. Check that the server is running and try again." }
+        };
+      }
     }
 
     function validateInput() {

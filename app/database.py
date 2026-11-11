@@ -1,6 +1,7 @@
 "SQLite persistence layer for subscriber preferences and digest history."""
 import os
 import sqlite3
+from pathlib import Path
 from contextlib import contextmanager
 from datetime import datetime, timezone
 from typing import Dict, Iterator, List, Optional
@@ -42,7 +43,12 @@ def get_db_path() -> str:
 @contextmanager
 def get_connection() -> Iterator[sqlite3.Connection]:
     """Yield a connection that commits on success and rolls back on error."""
-    conn = sqlite3.connect(get_db_path())
+    db_path = get_db_path()
+    if db_path != ":memory:":
+        db_file = Path(db_path).expanduser()
+        db_file.parent.mkdir(parents=True, exist_ok=True)
+        db_path = str(db_file)
+    conn = sqlite3.connect(db_path)
     conn.row_factory = sqlite3.Row
     conn.execute("PRAGMA foreign_keys = ON")
     try:
