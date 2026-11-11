@@ -1,6 +1,5 @@
 """Sprint 2 digest, template, mock sender and history regression tests."""
 import json
-from pathlib import Path
 
 import pytest
 from fastapi.testclient import TestClient
