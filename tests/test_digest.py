@@ -1,5 +1,6 @@
 """Sprint 2 digest, template, mock sender and history regression tests."""
 import json
+from pathlib import Path
 
 import pytest
 from fastapi.testclient import TestClient
@@ -122,3 +123,16 @@ def test_history_limit_is_bounded(client):
     response = client.get("/api/digest/history?limit=9999")
     assert response.status_code == 200
     assert len(response.json()) <= 500
+
+
+
+def test_database_creates_missing_parent_directories(tmp_path, monkeypatch):
+    db_path = tmp_path / "nested" / "data" / "news.db"
+    monkeypatch.setenv("NEWS_DB_PATH", str(db_path))
+
+    database.init_db()
+    saved = database.create_user("nested@example.com", ["technology"])
+
+    assert db_path.is_file()
+    assert database.get_user("nested@example.com").topics == ["technology"]
+    assert saved.email == "nested@example.com"
